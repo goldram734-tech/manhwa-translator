@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ManhwaUZ — AI Tarjimon</title>
+  <script src="https://js.puter.com/v2/"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── TOKENS ─────────────────────────────────── */
+    :root {
+      --ink:    #0f0e17;
+      --paper:  #fffcf5;
+      --panel:  #f5f2eb;
+      --accent: #e63946;
+      --accent2:#ff6b6b;
+      --blue:   #457b9d;
+      --green:  #2d6a4f;
+      --muted:  #6b6b6b;
+      --border: #e0ddd4;
+      --white:  #ffffff;
+      --shadow: 0 4px 24px rgba(15,14,23,.10);
+      --radius: 12px;
+    }
+
+    /* ── RESET ────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── HEADER ───────────────────────────────────── */
+    header {
+      background: var(--ink);
+      color: var(--white);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo-dot { color: var(--accent); }
+    .badge {
+      background: var(--accent);
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 100px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    nav { display: flex; gap: 24px; }
+    nav a {
+      color: rgba(255,255,255,.6);
+      text-decoration: none;
+      font-size: .875rem;
+      transition: color .2s;
+    }
+    nav a:hover { color: white; }
+
+    /* ── HERO ────────────────────────────────────── */
+    .hero {
+      background: var(--ink);
+      color: white;
+      padding: 72px 32px 64px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 40px,
+        rgba(230,57,70,.04) 40px,
+        rgba(230,57,70,.04) 41px
+      );
+      pointer-events: none;
+    }
+    .hero-kicker {
+      display: inline-block;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      margin-bottom: 16px;
+    }
+    .hero h1 em { color: var(--accent); font-style: normal; }
+    .hero p {
+      color: rgba(255,255,255,.65);
+      font-size: 1.05rem;
+      max-width: 520px;
+      margin: 0 auto 40px;
+    }
+
+    /* ── STATS STRIP ──────────────────────────────── */
+    .stats-strip {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      padding: 16px 0;
+      flex-wrap: wrap;
+    }
+    .stat { text-align: center; }
+    .stat-num {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-label {
+      font-size: .75rem;
+      color: rgba(255,255,255,.5);
+      letter-spacing: .5px;
+    }
+
+    /* ── MAIN WRAPPER ─────────────────────────────── */
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── CARD ─────────────────────────────────────── */
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: var(--ink);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title .step-num {
+      background: var(--accent);
+      color: white;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      font-size: .75rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ── UPLOAD BOX ───────────────────────────────── */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      position: relative;
+    }
+    .upload-zone:hover,
+    .upload-zone.drag-over {
+      border-color: var(--accent);
+      background: #fff5f5;
+    }
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .upload-icon { font-size: 3rem; margin-bottom: 12px; }
+    .upload-title {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+    .upload-hint { font-size: .85rem; color: var(--muted); }
+    .file-chosen {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      background: #f0faf4;
+      border: 1px solid #a7f3d0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-top: 16px;
+      font-size: .9rem;
+      color: var(--green);
+      font-weight: 500;
+    }
+    .file-chosen.show { display: flex; }
+
+    /* ── BACKEND URL INPUT ────────────────────────── */
+    .input-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .input-field {
+      flex: 1;
+      min-width: 200px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: .9rem;
+      color: var(--ink);
+      background: var(--panel);
+      outline: none;
+      transition: border-color .2s;
+    }
+    .input-field:focus { border-color: var(--accent); background: white; }
+    .url-hint { font-size: .8rem; color: var(--muted); margin-top: 6px; }
+    .url-hint a { color: var(--blue); text-decoration: none; }
+
+    /* ── BUTTONS ──────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      font-size: .95rem;
+      cursor: pointer;
+      transition: all .2s;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      width: 100%;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: #d62828;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(230,57,70,.2);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: var(--panel);
+      color: var(--ink);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--border);
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* ── PROGRESS ─────────────────────────────────── */
+    .progress-wrap {
+      display: none;
+      margin-bottom: 24px;
+    }
+    .progress-wrap.visible {
+      display: block;
+    }
+    .progress-title {
+      font-weight: 600;
+      font-size: .95rem;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .progress-status {
+      font-size: .85rem;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .progress-bar {
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      width: 0%;
+      transition: width .3s ease;
+    }
+
+    /* ── ALERTS ───────────────────────────────────– */
+    .alert {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      max-width: 320px;
+      padding: 14px 18px;
+      border-radius: 8px;
+      background: white;
+      border-left: 4px solid var(--green);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateX(400px);
+      transition: all .3s;
+      z-index: 1000;
+      font-size: .9rem;
+    }
+    .alert.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    #alertError { border-left-color: var(--accent); }
+    #alertInfo { border-left-color: var(--blue); }
+
+    /* ── RESULTS ──────────────────────────────────– */
+    .result-wrap {
+      display: none;
+      margin-top: 48px;
+    }
+    .result-wrap.visible {
+      display: block;
+    }
+    .result-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 1.3rem;
+      color: var(--ink);
+      margin-bottom: 24px;
+    }
+    .pages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .page-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: white;
+      box-shadow: var(--shadow);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .page-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(15,14,23,.15);
+    }
+    .page-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .page-card-footer {
+      padding: 12px;
+      background: var(--panel);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: .85rem;
+      color: var(--muted);
+    }
+    .page-num { font-weight: 500; }
+
+    /* ── LOG BOX ──────────────────────────────────– */
+    .log-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      font-size: .85rem;
+      font-family: 'Courier New', monospace;
+      max-height: 300px;
+      overflow-y: auto;
+      display: none;
+    }
+    .log-box.visible {
+      display: block;
+    }
+    .log-entry {
+      padding: 4px 0;
+      color: var(--muted);
+    }
+    .log-entry.success { color: var(--green); font-weight: 500; }
+    .log-entry.error { color: var(--accent); font-weight: 500; }
+    .log-entry.info { color: var(--blue); }
+
+    /* ── RESPONSIVE ───────────────────────────────– */
+    @media (max-width: 768px) {
+      header { padding: 0 16px; }
+      main { padding: 24px 16px 60px; }
+      .card { padding: 20px; }
+      .pages-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+      .alert { max-width: calc(100vw - 32px); right: 16px; bottom: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ────────────────────────────── HEADER ─────────────────────────────── -->
+<header>
+  <div class="logo">
+    ManhwaUZ <span class="logo-dot">•</span>
+    <span class="badge">v2</span>
+  </div>
+  <nav>
+    <a href="#features">Xususiyatlar</a>
+    <a href="#contact">Bog'lanish</a>
+  </nav>
+</header>
+
+<!-- ────────────────────────────── HERO ─────────────────────────────── -->
+<div class="hero">
+  <div class="hero-kicker">AI tarjimon</div>
+  <h1>Manga/Manhwa <em>O'zbekcha</em> tarjimasi</h1>
+  <p>GPT-4o + OCR texnologiyasi bilan Koreys komikslari va manga-larni o'zbekcha tarjima qiling</p>
+  <div class="stats-strip">
+    <div class="stat">
+      <div class="stat-num">∞</div>
+      <div class="stat-label">SAHIFALAR</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">100%</div>
+      <div class="stat-label">BEPUL</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">⚡</div>
+      <div class="stat-label">TEZKOR</div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────── MAIN ─────────────────────────────── -->
+<main>
+  <!-- STEP 1: UPLOAD PDF -->
+  <div class="card">
+    <div class="card-title">
+      <span class="step-num">1</span> PDF yuklash
+    </div>
+    <div class="upload-zone" id="uploadZone">
+      <div class="upload-icon">📄</div>
+      <div class="upload-title">PDF faylini bu yerga qo'ying</div>
+      <div class="upload-hint">Yoki shunga bosing — ≤50MB</div>
+      <input type="file" id="fileInput" accept=".pdf" />
+    </div>
+    <div class="file-chosen" id="fileChosen">
+      <span>✅</span>
+      <span id="fileName">-</span>
+    </div>
+  </div>
+
+  <!-- STEP 2: BACKEND URL -->
+  <div class="card">
+    <div class="card-title">
+      <span class="step-num">2</span> Backend URL
+    </div>
+    <div class="input-group">
+      <input type="text" id="backendUrl" class="input-field" placeholder="https://example.com" />
+      <button class="btn btn-secondary" onclick="testBackend()">🔗 Test</button>
+    </div>
+    <div class="url-hint">
+      Misol: <code>https://manhwa-backend.onrender.com</code>
+      <a href="https://render.com" target="_blank">Render.com-da deploy</a>
+    </div>
+  </div>
+
+  <!-- STEP 3: TRANSLATE -->
+  <div class="card">
+    <div class="card-title">
+      <span class="step-num">3</span> Tarjima qilish
+    </div>
+    <button id="translateBtn" class="btn btn-primary" onclick="startTranslation()" disabled>
+      🚀 Tarjima qilishni boshlash
+    </button>
+  </div>
+
+  <!-- PROGRESS -->
+  <div id="progressWrap" class="progress-wrap">
+    <div class="progress-title" id="progressTitle">-</div>
+    <div class="progress-status" id="progressStatus">-</div>
+    <div class="progress-bar">
+      <div id="progressFill" class="progress-fill"></div>
+    </div>
+    <div class="log-box" id="logBox"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="resultWrap" class="result-wrap">
+    <div class="result-title">✅ Tarjima tayyor!</div>
+    <div class="pages-grid" id="pagesGrid"></div>
+    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+      <button class="btn btn-primary" onclick="downloadAll()" style="width: auto;">
+        ⬇️ Barchasini yuklab olish
+      </button>
+      <button class="btn btn-secondary" onclick="resetAll()" style="width: auto;">
+        🔄 Yangi fayl
+      </button>
+    </div>
+  </div>
+</main>
+
+<!-- ALERTS -->
+<div id="alertError" class="alert"></div>
+<div id="alertInfo" class="alert"></div>
+
+<!-- ────────────────────────────── SCRIPT ─────────────────────────────– -->
+<script>
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let BACKEND_URL = "";
+let selectedFile = null;
+let resultPages = [];
+
+// ─────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────
+const $ = (id) => document.getElementById(id);
+
+function log(msg, type = "info") {
+  const el = $("logBox");
+  el.classList.add("visible");
+  const entry = document.createElement("div");
+  entry.className = "log-entry " + type;
+  entry.textContent = msg;
+  el.appendChild(entry);
+  el.scrollTop = el.scrollHeight;
+}
+
+function setProgress(pct, title, status) {
+  $("progressFill").style.width = pct + "%";
+  $("progressTitle").textContent = title || "-";
+  $("progressStatus").textContent = status || "-";
+}
+
+function showError(msg) {
+  const el = $("alertError");
+  el.textContent = "❌ " + msg;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 8000);
+}
+
+function showInfo(msg) {
+  const el = $("alertInfo");
+  el.textContent = "ℹ️ " + msg;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 5000);
+}
+
+// ─────────────────────────────────────────────
+// FILE INPUT
+// ─────────────────────────────────────────────
+const fileInput = $("fileInput");
+const uploadZone = $("uploadZone");
+
+fileInput.addEventListener("change", e => {
+  const f = e.target.files[0];
+  if (f) setFile(f);
+});
+
+uploadZone.addEventListener("dragover", e => {
+  e.preventDefault();
+  uploadZone.classList.add("drag-over");
+});
+
+uploadZone.addEventListener("dragleave", () => {
+  uploadZone.classList.remove("drag-over");
+});
+
+uploadZone.addEventListener("drop", e => {
+  e.preventDefault();
+  uploadZone.classList.remove("drag-over");
+  const f = e.dataTransfer.files[0];
+  if (f && f.name.toLowerCase().endsWith(".pdf")) setFile(f);
+  else showError("Faqat PDF fayl qabul qilinadi");
+});
+
+function setFile(f) {
+  selectedFile = f;
+  $("fileName").textContent = f.name + " (" + (f.size / 1024 / 1024).toFixed(1) + " MB)";
+  $("fileChosen").classList.add("show");
+  checkReady();
+}
+
+$("backendUrl").addEventListener("input", checkReady);
+
+function checkReady() {
+  const url = $("backendUrl").value.trim();
+  BACKEND_URL = url;
+  $("translateBtn").disabled = !(selectedFile && url);
+}
+
+// ─────────────────────────────────────────────
+// TEST BACKEND
+// ─────────────────────────────────────────────
+async function testBackend() {
+  const url = $("backendUrl").value.trim();
+  if (!url) { showError("Avval URL kiriting"); return; }
+  try {
+    const r = await fetch(url + "/health", { method: "GET" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = await r.json();
+    if (d.status === "ok") showInfo("✅ Backend ulangan: " + (d.service || "OK"));
+    else showError("Backend javob bermadi: " + JSON.stringify(d));
+  } catch (e) {
+    showError("Backend ulanmadi: " + e.message);
+  }
+}
+
+// ─────────────────────────────────────────────
+// MAIN FLOW
+// ─────────────────────────────────────────────
+async function startTranslation() {
+  if (!selectedFile || !BACKEND_URL) return;
+
+  resultPages = [];
+  $("pagesGrid").innerHTML = "";
+  $("resultWrap").classList.remove("visible");
+  $("logBox").innerHTML = "";
+  $("translateBtn").disabled = true;
+  $("progressWrap").classList.add("visible");
+  setProgress(0, "Boshlash...", "");
+
+  try {
+    // ── STEP 1: PDF → Images ──────────────────
+    log("PDF → PNG konvertatsiya boshlanmoqda...");
+    setProgress(5, "PDF → Rasm", "Backend-ga PDF yuborilmoqda...");
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    const convResp = await fetch(BACKEND_URL + "/convert-pdf", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!convResp.ok) {
+      const err = await convResp.json();
+      throw new Error(err.error || `HTTP ${convResp.status}`);
+    }
+
+    const convData = await convResp.json();
+    const pages = convData.pages || [];
+    
+    if (!pages.length) {
+      throw new Error("Hech qanday sahifa topilmadi");
+    }
+    
+    log(`✅ ${pages.length} sahifa konvertatsiya qilindi`, "success");
+    setProgress(15, "PDF → Rasm", `${pages.length} sahifa topildi`);
+
+    // ── STEP 2-4: Per-page OCR → Translate → Typeset ──
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i];
+      const pct  = 15 + Math.round(((i + 1) / pages.length) * 80);
+
+      // OCR
+      setProgress(pct, `Sahifa ${i+1}/${pages.length}`, "OCR (matn aniqlash)...");
+      log(`Sahifa ${i+1}: OCR boshlanmoqda...`);
+
+      const ocrResp = await fetch(BACKEND_URL + "/ocr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base64: page.base64 }),
+      });
+
+      if (!ocrResp.ok) {
+        log(`Sahifa ${i+1}: OCR xatosi (${ocrResp.status})`, "error");
+        resultPages.push({ index: i, base64: page.base64 });
+        continue;
+      }
+
+      const ocrData = await ocrResp.json();
+      
+      if (ocrData.error) {
+        log(`Sahifa ${i+1}: OCR xatosi - ${ocrData.error}`, "error");
+        resultPages.push({ index: i, base64: page.base64 });
+        continue;
+      }
+
+      log(`Sahifa ${i+1}: ${ocrData.lines?.length || 0} matn qatori aniqlandi`);
+
+      if (!ocrData.lines || ocrData.lines.length === 0) {
+        resultPages.push({ index: i, base64: page.base64 });
+        log(`Sahifa ${i+1}: Matn yo'q — o'tkazib yuborildi`, "error");
+        continue;
+      }
+
+      // TRANSLATION
+      setProgress(pct, `Sahifa ${i+1}/${pages.length}`, "AI tarjima (GPT-4o)...");
+      log(`Sahifa ${i+1}: GPT-4o tarjima boshlanmoqda...`);
+
+      const translations = [];
+      for (const lineObj of ocrData.lines) {
+        if (!lineObj.text.trim()) continue;
+        const uzText = await translateLine(lineObj.text);
+        translations.push({ ...lineObj, translated: uzText });
+      }
+      log(`Sahifa ${i+1}: ${translations.length} qator tarjima qilindi`, "success");
+
+      // TYPESET
+      setProgress(pct, `Sahifa ${i+1}/${pages.length}`, "Matn joylashtirish...");
+      log(`Sahifa ${i+1}: Typesetting...`);
+
+      const tsResp = await fetch(BACKEND_URL + "/typeset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base64: page.base64, translations }),
+      });
+
+      if (!tsResp.ok) {
+        log(`Sahifa ${i+1}: Typesetting xatosi (${tsResp.status})`, "error");
+        resultPages.push({ index: i, base64: page.base64 });
+        continue;
+      }
+
+      const tsData = await tsResp.json();
+
+      if (tsData.base64) {
+        resultPages.push({ index: i, base64: tsData.base64 });
+        log(`Sahifa ${i+1}: ✅ Tayyor`, "success");
+      } else {
+        resultPages.push({ index: i, base64: page.base64 });
+        log(`Sahifa ${i+1}: Typesetting xatosi — original saqlandi`, "error");
+      }
+    }
+
+    // ── DONE ──────────────────────────────────
+    setProgress(100, "Tarjima tayyor! 🎉", `${resultPages.length} sahifa tayyor`);
+    log(`✅ Barchasi tayyor! ${resultPages.length} sahifa`, "success");
+    displayResults();
+
+  } catch (err) {
+    console.error(err);
+    log("XATO: " + err.message, "error");
+    showError(err.message);
+    setProgress(0, "Xatolik", err.message);
+  } finally {
+    $("translateBtn").disabled = false;
+  }
+}
+
+// ─────────────────────────────────────────────
+// TRANSLATION (PUTER.JS)
+// ─────────────────────────────────────────────
+async function translateLine(koreysText) {
+  if (!koreysText.trim()) return "";
+  try {
+    // Puter.js ichidagi AI chat
+    let resp = await puter.ai.chat(
+      `Sen manga/manhwa tarjimonisan. Quyidagi koreys matnni O'zbek tiliga tarjima qil.
+Muhim: faqat tarjimani yoz, hech qanday tushuntirish yoki qo'shimcha so'z yo'q.
+Dialogdagi ifodalar va tovushlarni ham tarjima qil (masalan: "아아아" → "Aaaa").
+
+Koreys matni: ${koreysText}`,
+      { model: "gpt-4o" }
+    );
+
+    // Puter.js response parsing
+    if (typeof resp === "string") return resp.trim();
+    if (resp?.message?.content) return resp.message.content.trim();
+    if (resp?.content) return resp.content.trim();
+    if (resp?.text) return resp.text.trim();
+    
+    console.warn("Tarjima: noaniq javob", resp);
+    return koreysText;
+  } catch (e) {
+    console.warn("Tarjima xatosi:", e);
+    return koreysText;
+  }
+}
+
+// ─────────────────────────────────────────────
+// DISPLAY RESULTS
+// ─────────────────────────────────────────────
+function displayResults() {
+  const grid = $("pagesGrid");
+  grid.innerHTML = "";
+
+  resultPages.forEach(page => {
+    const card = document.createElement("div");
+    card.className = "page-card";
+
+    const img = document.createElement("img");
+    img.src = "data:image/png;base64," + page.base64;
+    img.alt = `Sahifa ${page.index + 1}`;
+    img.loading = "lazy";
+
+    const footer = document.createElement("div");
+    footer.className = "page-card-footer";
+    footer.innerHTML = `
+      <span class="page-num">Sahifa ${page.index + 1}</span>
+      <button class="btn btn-secondary" style="padding:4px 12px;font-size:.78rem;"
+        onclick="downloadPage(${page.index})">⬇️</button>
+    `;
+    card.appendChild(img);
+    card.appendChild(footer);
+    grid.appendChild(card);
+  });
+
+  $("resultWrap").classList.add("visible");
+  $("resultWrap").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ─────────────────────────────────────────────
+// DOWNLOAD
+// ─────────────────────────────────────────────
+function downloadPage(index) {
+  const page = resultPages.find(p => p.index === index);
+  if (!page) return;
+  const link = document.createElement("a");
+  link.href = "data:image/png;base64," + page.base64;
+  link.download = `manhwa_uz_page_${index + 1}.png`;
+  link.click();
+}
+
+function downloadAll() {
+  resultPages.forEach((page, i) => {
+    setTimeout(() => downloadPage(page.index), i * 300);
+  });
+}
+
+// ─────────────────────────────────────────────
+// RESET
+// ─────────────────────────────────────────────
+function resetAll() {
+  selectedFile = null;
+  resultPages  = [];
+  fileInput.value = "";
+  $("fileChosen").classList.remove("show");
+  $("progressWrap").classList.remove("visible");
+  $("resultWrap").classList.remove("visible");
+  $("logBox").innerHTML = "";
+  $("logBox").classList.remove("visible");
+  $("translateBtn").disabled = true;
+  setProgress(0, "", "");
+}
+</script>
+
+</body>
+</html>

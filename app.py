@@ -74,7 +74,7 @@ def ocr_image(base64_img: str) -> dict:
     Returns: { "text": str, "lines": [...] }
     """
     try:
-from chrome_lens_py import ChromeLens as GoogleLens
+        from chrome_lens_py import ChromeLens as GoogleLens
         
         # Base64 rasmni baytlarga o'girish
         img_bytes = base64.b64decode(base64_img)

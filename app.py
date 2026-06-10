@@ -237,6 +237,12 @@ def wrap_text(text: str, font, max_width: int) -> list:
 # ROUTES
 # ─────────────────────────────────────────────
 
+
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+
 @app.before_request
 def handle_preflight():
     if request.method == "OPTIONS":

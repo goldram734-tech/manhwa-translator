@@ -5,6 +5,6 @@ services:
     plan: free
     envVars:
       - key: OCR_SPACE_API_KEY
-        value: K81851527588957
+        value: K89989399988957
       - key: PORT
         value: 5000

@@ -5,4 +5,4 @@ PyMuPDF==1.24.5
 requests==2.32.3
 gunicorn==22.0.0
 python-dotenv==1.0.0
-chrome-lens-py
+pytesseract==0.3.13

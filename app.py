@@ -70,47 +70,39 @@ def pdf_to_images(pdf_bytes: bytes, dpi: int = 150) -> list:
 
 def ocr_image(base64_img: str) -> dict:
     """
-    Google Lens API orqali rasmdan inglizcha matnlarni o'qish (Tezkor va bepul)
-    Returns: { "text": str, "lines": [...] }
+    Server ichidagi Tesseract orqali inglizcha matnlarni mutlaqo bepul va tez o'qish
     """
     try:
-        from chrome_lens_py import ChromeLens as GoogleLens
+        import pytesseract
         
-        # Base64 rasmni baytlarga o'girish
+        # Base64 rasmni PIL formatiga o'tkazish
         img_bytes = base64.b64decode(base64_img)
+        img = Image.open(io.BytesIO(img_bytes))
         
-        # Google Lens orqali sknerlash (Ingliz tili rejimi)
-        lens = GoogleLens()
-        data = lens.match(img_bytes, lang="en")
+        # Tesseract orqali matn va koordinatalarni olish
+        data = pytesseract.image_to_data(img, lang="eng", output_type=pytesseract.Output.DICT)
         
-        full_text = data.get("text", "").strip()
+        full_text = " ".join(data["text"]).strip()
         lines = []
         
-        # Google Lens natijalarini loyihamiz formatiga moslash
-        for block in data.get("blocks", []):
-            line_text = block.get("text", "").strip()
-            if not line_text:
+        # Har bir so'z koordinatasini hisoblash
+        for i in range(len(data["text"])):
+            word_text = data["text"][i].strip()
+            if not word_text or len(word_text) < 2:
                 continue
                 
-            # Koordinatalarni olish (Google Lens o'lchamlari)
-            box = block.get("box", {})
-            left = box.get("left", 0)
-            top = box.get("top", 0)
-            width = box.get("width", 100)
-            height = box.get("height", 30)
-            
             lines.append({
-                "text": line_text,
-                "x": int(left),
-                "y": int(top),
-                "w": int(width),
-                "h": int(height)
+                "text": word_text,
+                "x": int(data["left"][i]),
+                "y": int(data["top"][i]),
+                "w": int(data["width"][i]),
+                "h": int(data["height"][i])
             })
             
         return {"text": full_text, "lines": lines}
         
     except Exception as e:
-        return {"text": "", "lines": [], "error": f"Google Lens OCR xatosi: {str(e)}"}
+        return {"text": "", "lines": [], "error": f"Tesseract OCR xatosi: {str(e)}"}
 
 
 def draw_translated_image(base64_img: str, translations: list) -> str:

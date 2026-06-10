@@ -74,7 +74,7 @@ def ocr_image(base64_img: str) -> dict:
     Returns: { "text": str, "lines": [...] }
     """
     try:
-                payload = {
+        payload = {
             "base64Image": f"data:image/png;base64,{base64_img}",
             "language": "kor",
             "isOverlayRequired": True,
@@ -84,8 +84,6 @@ def ocr_image(base64_img: str) -> dict:
             "filetype": "PNG",
             "isTable": True,
         }
-
-        
         headers = {"apikey": OCR_SPACE_API_KEY}
         
         resp = requests.post(
@@ -117,18 +115,22 @@ def ocr_image(base64_img: str) -> dict:
                 if not line_text.strip():
                     continue
                 
-                # Bounding box
-                lefts  = [w.get("Left", 0) for w in words]
-                tops   = [w.get("Top", 0) for w in words]
-                rights = [w.get("Left", 0) + w.get("Width", 0) for w in words]
-                bots   = [w.get("Top", 0) + w.get("Height", 0) for w in words]
+                # Bounding box - bitta siklda optimallashtirilgan holat
+                lefts, tops, rights, bots = [], [], [], []
+                for w in words:
+                    left = w.get("Left", 0)
+                    top = w.get("Top", 0)
+                    lefts.append(left)
+                    tops.append(top)
+                    rights.append(left + w.get("Width", 0))
+                    bots.append(top + w.get("Height", 0))
                 
                 lines.append({
                     "text": line_text,
                     "x": min(lefts) if lefts else 0,
                     "y": min(tops) if tops else 0,
-                    "w": (max(rights) - min(lefts)) if rights and lefts else 100,
-                    "h": (max(bots) - min(tops)) if bots and tops else 30,
+                    "w": sum(w.get("Width", 0) for w in words) if words else 100,
+                    "h": max(w.get("Height", 0) for w in words) if words else 30,
                 })
 
         return {"text": full_text, "lines": lines}
@@ -154,11 +156,15 @@ def draw_translated_image(base64_img: str, translations: list) -> str:
         # Font — Unicode (O'zbek) uchun
         font_size = 14
         try:
-            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
-            font_bold = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
-        except Exception:
-            font = ImageFont.load_default()
-            font_bold = font
+            font = ImageFont.truetype("LiberationSans-Regular.ttf", font_size)
+            font_bold = ImageFont.truetype("LiberationSans-Bold.ttf", font_size)
+        except IOError:
+            try:
+                font = ImageFont.truetype("DejaVuSans.ttf", font_size)
+                font_bold = ImageFont.truetype("DejaVuSans-Bold.ttf", font_size)
+            except IOError:
+                font = ImageFont.load_default()
+                font_bold = ImageFont.load_default()
 
         for item in translations:
             try:
@@ -204,6 +210,7 @@ def draw_translated_image(base64_img: str, translations: list) -> str:
     
     except Exception as e:
         raise Exception(f"Typesetting xatosi: {str(e)}")
+
 
 
 def wrap_text(text: str, font, max_width: int) -> list:

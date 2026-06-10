@@ -9,7 +9,7 @@ import io
 import base64
 import json
 import requests
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from PIL import Image, ImageDraw, ImageFont
 import fitz  # PyMuPDF

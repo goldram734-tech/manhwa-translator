@@ -74,15 +74,17 @@ def ocr_image(base64_img: str) -> dict:
     Returns: { "text": str, "lines": [...] }
     """
     try:
-        payload = {
+                payload = {
             "base64Image": f"data:image/png;base64,{base64_img}",
             "language": "kor",
             "isOverlayRequired": True,
             "detectOrientation": True,
             "scale": True,
-            "OCREngine": 2,
+            "OCREngine": "1",
             "filetype": "PNG",
+            "isTable": True,
         }
+
         
         headers = {"apikey": OCR_SPACE_API_KEY}
         

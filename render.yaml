@@ -1,13 +1,9 @@
 services:
   - type: web
     name: manhwa-translator
-    env: python
+    env: docker
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn -w 2 -b 0.0.0.0:5000 app:app
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.0
       - key: OCR_SPACE_API_KEY
         value: K81851527588957
       - key: PORT

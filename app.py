@@ -107,65 +107,79 @@ def ocr_image(base64_img: str) -> dict:
 
 def draw_translated_image(base64_img: str, translations: list) -> str:
     """
-    Har bir OCR box ustiga:
-    1. Oq to'rtburchak (original matnni berkitish)
-    2. O'zbek matni yozish
-    Returns: base64 PNG
+    Photoshop kabi Inpainting (sezilmas o'chirish) algoritmi bilan matnni almashtirish
     """
     try:
+        import cv2
+        import numpy as np
+        
+        # 1. Base64 dan rasmni yuklab OpenCV formatiga (NumPy) o'tkazamiz
         img_bytes = base64.b64decode(base64_img)
-        img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
-        draw = ImageDraw.Draw(img)
-
-        # Font — Unicode (O'zbek) uchun
+        nparr = np.frombuffer(img_bytes, np.uint8)
+        img_cv = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        # 2. Matnlar turgan joy uchun qora rangda bo'sh maska (niqob) yaratamiz
+        mask = np.zeros(img_cv.shape[:2], dtype=np.uint8)
+        
+        # 3. Maska yuziga matnlar turgan joylarni oq rangda chizib chiqamiz
+        for item in translations:
+            x = int(item.get("x", 0))
+            y = int(item.get("y", 0))
+            w = int(item.get("w", 100))
+            h = int(item.get("h", 30))
+            if not str(item.get("translated", "")).strip():
+                continue
+                
+            # Matn atrofini biroz kengroq olib maskaga oq quti chizamiz
+            padding = 2
+            cv2.rectangle(mask, (x - padding, y - padding), (x + w + padding, y + h + padding), 255, -1)
+            
+        # 4. ENGMUHIM JOYI: OpenCV Navier-Stokes inpainting algoritmi yordamida 
+        # rasm yuzidagi barcha oq qutilarni (matnlarni) sezilmas qilib o'chirib, fonni tiklaymiz!
+        inpainted_img = cv2.inpaint(img_cv, mask, inpaintRadius=3, flags=cv2.INPAINT_NS)
+        
+        # 5. Tozalangan rasmni matn yozish uchun PIL formatiga qaytaramiz
+        img_pil = Image.fromarray(cv2.cvtColor(inpainted_img, cv2.COLOR_BGR2RGB))
+        draw = ImageDraw.Draw(img_pil)
+        
+        # Shriftni sozlash
         font_size = 14
         try:
             font = ImageFont.truetype("LiberationSans-Regular.ttf", font_size)
-            font_bold = ImageFont.truetype("LiberationSans-Bold.ttf", font_size)
         except IOError:
-            try:
-                font = ImageFont.truetype("DejaVuSans.ttf", font_size)
-                font_bold = ImageFont.truetype("DejaVuSans-Bold.ttf", font_size)
-            except IOError:
-                font = ImageFont.load_default()
-                font_bold = ImageFont.load_default()
+            font = ImageFont.load_default()
 
+        # 6. Endi tozalangan rasm yuziga yangi o'zbekcha matnlarni chizamiz
         for item in translations:
-            try:
-                x = int(item.get("x", 0))
-                y = int(item.get("y", 0))
-                w = int(item.get("w", 100))
-                h = int(item.get("h", 30))
-                uz_text = str(item.get("translated", ""))
-                
-                if not uz_text or not uz_text.strip():
-                    continue
-
-                # 1. Oq box (inpainting o'rniga)
-                padding = 3
-                draw.rectangle(
-                    [x - padding, y - padding, x + w + padding, y + h + padding],
-                    fill="white",
-                    outline="#cccccc",
-                    width=1,
-                )
-
-                # 2. Matn yozish (word wrap)
-                wrapped = wrap_text(uz_text, font, w + padding * 2)
-                text_y = y
-                
-                for line in wrapped:
-                    if text_y + font_size > y + h + padding * 2 + 5:
-                        break
-                    try:
-                        draw.text((x, text_y), line, fill="#1a1a1a", font=font)
-                    except Exception:
-                        pass
-                    text_y += font_size + 2
-            
-            except Exception as e:
-                print(f"Translation item xatosi: {e}")
+            x = int(item.get("x", 0))
+            y = int(item.get("y", 0))
+            w = int(item.get("w", 100))
+            uz_text = str(item.get("translated", ""))
+            if not uz_text.strip():
                 continue
+                
+            # Matn rasm ustida har qanday fonda (och yoki to'q) ideal o'qilishi uchun
+            # unga qora rangda soya (outline/stroke) berib, ichini oq rangda yozamiz
+            wrapped = wrap_text(uz_text, font, w)
+            text_y = y
+            for line in wrapped:
+                draw.text(
+                    (x, text_y), 
+                    line, 
+                    fill="white", 
+                    font=font,
+                    stroke_width=2,
+                    stroke_fill="#1a1a1a" # Qora soya
+                )
+                text_y += font_size + 2
+
+        # PNG → base64 formatiga qaytarish
+        buf = io.BytesIO()
+        img_pil.save(buf, format="PNG", optimize=True)
+        return base64.b64encode(buf.getvalue()).decode("utf-8")
+        
+    except Exception as e:
+        raise Exception(f"Typesetting xatosi: {str(e)}")
 
         # PNG → base64
         buf = io.BytesIO()

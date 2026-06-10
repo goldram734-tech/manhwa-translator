@@ -70,75 +70,47 @@ def pdf_to_images(pdf_bytes: bytes, dpi: int = 150) -> list:
 
 def ocr_image(base64_img: str) -> dict:
     """
-    OCR.space API — bepul, manga uchun optimal
+    Google Lens API orqali rasmdan inglizcha matnlarni o'qish (Tezkor va bepul)
     Returns: { "text": str, "lines": [...] }
     """
     try:
-        payload = {
-            "base64Image": f"data:image/png;base64,{base64_img}",
-           "language": "eng",
-            "isOverlayRequired": True,
-            "detectOrientation": True,
-            "scale": True,
-            "OCREngine": "1",
-            "filetype": "PNG",
-            "isTable": True,
-        }
-        headers = {"apikey": OCR_SPACE_API_KEY}
+        from pygooglelens import GoogleLens
         
-        resp = requests.post(
-            "https://api.ocr.space/parse/image",
-            data=payload,
-            headers=headers,
-            timeout=OCR_TIMEOUT
-        )
+        # Base64 rasmni baytlarga o'girish
+        img_bytes = base64.b64decode(base64_img)
         
-        data = resp.json()
-
-        if data.get("IsErroredOnProcessing"):
-            return {"text": "", "lines": [], "error": data.get("ErrorMessage", "OCR xatosi")}
-
-        result = data.get("ParsedResults", [{}])[0]
-        full_text = result.get("ParsedText", "").strip()
-
-        # TextOverlay bilan line boxes
+        # Google Lens orqali sknerlash (Ingliz tili rejimi)
+        lens = GoogleLens()
+        data = lens.match(img_bytes, lang="en")
+        
+        full_text = data.get("text", "").strip()
         lines = []
-        overlay = result.get("TextOverlay", {})
         
-        if overlay and isinstance(overlay, dict):
-            for line in overlay.get("Lines", []):
-                words = line.get("Words", [])
-                if not words:
-                    continue
+        # Google Lens natijalarini loyihamiz formatiga moslash
+        for block in data.get("blocks", []):
+            line_text = block.get("text", "").strip()
+            if not line_text:
+                continue
                 
-                line_text = " ".join(w.get("WordText", "") for w in words if w.get("WordText"))
-                if not line_text.strip():
-                    continue
-                
-                # Bounding box - bitta siklda optimallashtirilgan holat
-                lefts, tops, rights, bots = [], [], [], []
-                for w in words:
-                    left = w.get("Left", 0)
-                    top = w.get("Top", 0)
-                    lefts.append(left)
-                    tops.append(top)
-                    rights.append(left + w.get("Width", 0))
-                    bots.append(top + w.get("Height", 0))
-                
-                lines.append({
-                    "text": line_text,
-                    "x": min(lefts) if lefts else 0,
-                    "y": min(tops) if tops else 0,
-                    "w": sum(w.get("Width", 0) for w in words) if words else 100,
-                    "h": max(w.get("Height", 0) for w in words) if words else 30,
-                })
-
+            # Koordinatalarni olish (Google Lens o'lchamlari)
+            box = block.get("box", {})
+            left = box.get("left", 0)
+            top = box.get("top", 0)
+            width = box.get("width", 100)
+            height = box.get("height", 30)
+            
+            lines.append({
+                "text": line_text,
+                "x": int(left),
+                "y": int(top),
+                "w": int(width),
+                "h": int(height)
+            })
+            
         return {"text": full_text, "lines": lines}
-    
-    except requests.Timeout:
-        return {"text": "", "lines": [], "error": "OCR timeout (30s)"}
+        
     except Exception as e:
-        return {"text": "", "lines": [], "error": str(e)}
+        return {"text": "", "lines": [], "error": f"Google Lens OCR xatosi: {str(e)}"}
 
 
 def draw_translated_image(base64_img: str, translations: list) -> str:

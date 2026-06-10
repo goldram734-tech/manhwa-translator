@@ -76,7 +76,7 @@ def ocr_image(base64_img: str) -> dict:
     try:
         payload = {
             "base64Image": f"data:image/png;base64,{base64_img}",
-            "language": "kor",
+           "language": "eng",
             "isOverlayRequired": True,
             "detectOrientation": True,
             "scale": True,
